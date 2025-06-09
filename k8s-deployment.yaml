@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-kotlin-app
+  labels:
+    app: spring-kotlin-app
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: spring-kotlin-app
+  template:
+    metadata:
+      labels:
+        app: spring-kotlin-app
+    spec:
+      containers:
+      - name: spring-kotlin-app
+        image: gcr.io/cloud-apps-462407/spring-kotlin-app:v1.0.0
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-kotlin-service
+spec:
+  selector:
+    app: spring-kotlin-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
+
